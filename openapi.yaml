@@ -1,0 +1,215 @@
+openapi: 3.0.3
+
+info:
+  title: API de gestión de tareas
+  version: 1.0.0
+  description: |
+    API REST para gestionar tareas. Permite consultar, crear, modificar y
+    eliminar tareas.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.tareas.local/v1
+    description: Servidor de producción
+
+security: []
+
+tags:
+  - name: Tareas
+    description: Operaciones relacionadas con la gestión de tareas
+
+paths:
+  /tasks:
+    get:
+      summary: Consultar todas las tareas
+      operationId: getTasks
+      tags:
+        - Tareas
+      responses:
+        '200':
+          description: Lista de tareas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '400':
+          description: Petición inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Crear una tarea
+      operationId: createTask
+      tags:
+        - Tareas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Tarea creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/taskId'
+    get:
+      summary: Consultar una tarea por su ID
+      operationId: getTaskById
+      tags:
+        - Tareas
+      responses:
+        '200':
+          description: Tarea encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Tarea no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Modificar una tarea (cuerpo completo)
+      operationId: updateTask
+      tags:
+        - Tareas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '200':
+          description: Tarea actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Tarea no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Eliminar una tarea
+      operationId: deleteTask
+      tags:
+        - Tareas
+      responses:
+        '204':
+          description: Tarea eliminada
+        '404':
+          description: Tarea no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  parameters:
+    taskId:
+      name: taskId
+      in: path
+      required: true
+      description: Identificador de la tarea
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+
+  schemas:
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - completed
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identificador único de la tarea (UUID v4)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          maxLength: 100
+          description: Título de la tarea
+          example: "Comprar leche"
+        description:
+          type: string
+          nullable: true
+          description: Descripción de la tarea
+          example: "Comprar leche entera en el supermercado"
+        completed:
+          type: boolean
+          description: Indica si la tarea está completada
+          default: false
+          example: false
+    TaskInput:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          description: Título de la tarea
+          example: "Comprar leche"
+        description:
+          type: string
+          nullable: true
+          description: Descripción de la tarea
+          example: "Comprar leche entera en el supermercado"
+        completed:
+          type: boolean
+          description: Indica si la tarea está completada
+          default: false
+          example: false
+    Error:
+      type: object
+      required:
+        - message
+        - code
+      properties:
+        message:
+          type: string
+          description: Descripción del error
+          example: "Task not found"
+        code:
+          type: integer
+          description: Código de error HTTP
+          example: 404
+          enum:
+            - 400
+            - 401
+            - 403
+            - 404
+            - 500
